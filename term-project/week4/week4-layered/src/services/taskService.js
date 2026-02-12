@@ -1,4 +1,4 @@
-const taskRepository = require('../repositories/taskRepository');
+const taskRepository = require('../repository/taskRepository');
 const Task = require('../models/Task');
 
 class TaskService {
