@@ -4,6 +4,7 @@ const database = require('./database/connection');
 const taskController = require('./src/controllers/taskController');
 const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
+const cors = require('cors');  // เพิ่มบรรทัดนี้
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,16 @@ app.delete('/api/tasks/:id', taskController.deleteTask.bind(taskController));
 // Routes - Special actions
 app.patch('/api/tasks/:id/next-status', taskController.moveToNextStatus.bind(taskController));
 
+// การตั้งค่า CORS - เพิ่มส่วนนี้
+const corsOptions = {
+    origin: true, // อนุญาตทุก origins ใน development
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));  // เพิ่มบรรทัดนี้
+
+
 // Error handling middleware (ต้องอยู่สุดท้าย)
 app.use(errorHandler);
 
@@ -39,7 +50,7 @@ async function startServer() {
     try {
         // เชื่อมต่อฐานข้อมูล
         await database.connect();
-        
+
         // เริ่ม Express server
         app.listen(PORT, () => {
             logger.info(`🚀 เซิร์ฟเวอร์ทำงานที่ http://localhost:${PORT}`);
