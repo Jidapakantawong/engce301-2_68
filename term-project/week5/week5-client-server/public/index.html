@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Board - Monolithic Architecture</title>
+    <title>Task Board - Client-Server</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <!-- ========================================
              HEADER SECTION
              ======================================== -->
         <header>
-            <h1>📋 Task Board</h1>
-            <p class="subtitle">Monolithic Architecture Demo - Week 3</p>
+            <h1>📋 Task Board - Client-Server Architecture</h1>
+            <div id="serverStatus" class="status-bar">
+                <span id="statusIndicator">🔴</span>
+                <span id="statusText">กำลังเชื่อมต่อ server...</span>
+            </div>
         </header>
 
         <!-- ========================================
@@ -21,28 +26,18 @@
              ======================================== -->
         <section class="add-task-section">
             <h2>➕ Add New Task</h2>
-            
+
             <!-- TODO: Complete the form with proper event handling -->
             <form id="addTaskForm">
                 <div class="form-group">
                     <label for="taskTitle">Task Title *</label>
-                    <input 
-                        type="text" 
-                        id="taskTitle" 
-                        placeholder="Enter task title" 
-                        required
-                        maxlength="200"
-                    >
+                    <input type="text" id="taskTitle" placeholder="Enter task title" required maxlength="200">
                 </div>
 
                 <div class="form-group">
                     <label for="taskDescription">Description</label>
                     <!-- TODO: Add textarea for description -->
-                    <textarea 
-                        id="taskDescription" 
-                        placeholder="Enter task description"
-                        rows="3"
-                    ></textarea>
+                    <textarea id="taskDescription" placeholder="Enter task description" rows="3"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -64,7 +59,7 @@
              ======================================== -->
         <section class="tasks-section">
             <h2>📊 All Tasks</h2>
-            
+
             <!-- Filter Section -->
             <div class="filter-section">
                 <label for="statusFilter">Filter by Status:</label>
@@ -134,8 +129,10 @@
     <!-- ========================================
          JAVASCRIPT
          ======================================== -->
+    <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
 
 <!-- 

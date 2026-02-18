@@ -1,6 +1,32 @@
 // app.js - Frontend Logic (SOLUTION CODE)
 // Task Board Application
 
+// เพิ่มที่ด้านบน
+const API_BASE = API_CONFIG.BASE_URL;
+const API = {
+    TASKS: `${API_BASE}${API_CONFIG.ENDPOINTS.TASKS}`,
+    STATS: `${API_BASE}${API_CONFIG.ENDPOINTS.STATS}`
+};
+
+// อัพเดท fetch calls ทั้งหมด
+// เปลี่ยนจาก: fetch('/api/tasks')
+// เป็น: fetch(API.TASKS)
+
+// ตัวอย่าง:
+async function loadTasks() {
+    try {
+        const res = await fetch(API.TASKS);
+        if (!res.ok) throw new Error('โหลด tasks ล้มเหลว');
+        const { data } = await res.json();
+        renderTasks(data);
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+        showError('โหลด tasks จาก server ล้มเหลว');
+    }
+}
+
+// อัพเดท fetch calls อื่นๆ ด้วยวิธีเดียวกัน...
+
 // ===== STATE =====
 let allTasks = [];
 let currentFilter = 'ALL';
@@ -25,12 +51,12 @@ const doneCount = document.getElementById('doneCount');
 async function fetchTasks() {
     showLoading();
     try {
-        const response = await fetch('/api/tasks');
-        
+        const response = await fetch(API.TASKS);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         // allTasks = Array.isArray(data) ? data : (data.tasks || []);
         allTasks = result.data || (Array.isArray(result) ? result : []);
@@ -47,26 +73,26 @@ async function fetchTasks() {
 async function createTask(taskData) {
     showLoading();
     try {
-        const response = await fetch('/api/tasks', {
+        const response = await fetch(API.TASKS, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(taskData)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to create task');
         }
-        
+
         const data = await response.json();
         allTasks.unshift(data); // Add to beginning
         renderTasks();
-        
+
         // Reset form
         addTaskForm.reset();
-        
+
         // Success message
         showNotification('✅ Task created successfully!', 'success');
     } catch (error) {
@@ -80,27 +106,27 @@ async function createTask(taskData) {
 async function updateTaskStatus(taskId, newStatus) {
     showLoading();
     try {
-        const response = await fetch(`/api/tasks/${taskId}`, {
+        const response = await fetch(`${API.TASKS}/${taskId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ status: newStatus })
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to update status');
         }
-        
+
         const data = await response.json();
-        
+
         // Update local state
         const index = allTasks.findIndex(t => t.id === taskId);
         if (index !== -1) {
             allTasks[index] = data;
         }
-        
+
         renderTasks();
         showNotification(`✅ Task moved to ${newStatus.replace('_', ' ')}`, 'success');
     } catch (error) {
@@ -116,22 +142,22 @@ async function deleteTask(taskId) {
     if (!confirm('⚠️ Are you sure you want to delete this task?')) {
         return;
     }
-    
+
     showLoading();
     try {
-        const response = await fetch(`/api/tasks/${taskId}`, {
+        const response = await fetch(`${API.TASKS}/${taskId}`, {
             method: 'DELETE'
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to delete task');
         }
-        
+
         // Remove from local state
         allTasks = allTasks.filter(t => t.id !== taskId);
         renderTasks();
-        
+
         showNotification('✅ Task deleted successfully!', 'success');
     } catch (error) {
         console.error('Error deleting task:', error);
@@ -148,23 +174,23 @@ function renderTasks() {
     todoTasks.innerHTML = '';
     progressTasks.innerHTML = '';
     doneTasks.innerHTML = '';
-    
+
     // Filter tasks
     let filteredTasks = allTasks;
     if (currentFilter !== 'ALL') {
         filteredTasks = allTasks.filter(task => task.status === currentFilter);
     }
-    
+
     // Separate by status
     const todo = filteredTasks.filter(t => t.status === 'TODO');
     const progress = filteredTasks.filter(t => t.status === 'IN_PROGRESS');
     const done = filteredTasks.filter(t => t.status === 'DONE');
-    
+
     // Update counters
     todoCount.textContent = todo.length;
     progressCount.textContent = progress.length;
     doneCount.textContent = done.length;
-    
+
     // Render each column
     renderTaskList(todo, todoTasks, 'TODO');
     renderTaskList(progress, progressTasks, 'IN_PROGRESS');
@@ -177,15 +203,15 @@ function renderTaskList(tasks, container, currentStatus) {
             <div class="empty-state">
                 <p>📭 No tasks here</p>
                 <p style="font-size: 0.85em; color: #999;">
-                    ${currentStatus === 'TODO' ? 'Add a new task to get started!' : 
-                      currentStatus === 'IN_PROGRESS' ? 'Move tasks here when you start working' : 
-                      'Complete tasks to see them here'}
+                    ${currentStatus === 'TODO' ? 'Add a new task to get started!' :
+                currentStatus === 'IN_PROGRESS' ? 'Move tasks here when you start working' :
+                    'Complete tasks to see them here'}
                 </p>
             </div>
         `;
         return;
     }
-    
+
     tasks.forEach(task => {
         const card = createTaskCard(task, currentStatus);
         container.appendChild(card);
@@ -196,13 +222,13 @@ function createTaskCard(task, currentStatus) {
     const card = document.createElement('div');
     card.className = 'task-card';
     card.setAttribute('data-task-id', task.id);
-    
+
     const priorityClass = `priority-${task.priority.toLowerCase()}`;
-    
+
     // Format dates
     const createdDate = formatDate(task.created_at);
     const updatedDate = task.updated_at !== task.created_at ? formatDate(task.updated_at) : null;
-    
+
     card.innerHTML = `
         <div class="task-header">
             <div class="task-title">${escapeHtml(task.title)}</div>
@@ -220,13 +246,13 @@ function createTaskCard(task, currentStatus) {
             </button>
         </div>
     `;
-    
+
     return card;
 }
 
 function createStatusButtons(taskId, currentStatus) {
     const buttons = [];
-    
+
     if (currentStatus !== 'TODO') {
         buttons.push(`
             <button class="btn btn-warning btn-sm" onclick="updateTaskStatus(${taskId}, 'TODO')">
@@ -234,7 +260,7 @@ function createStatusButtons(taskId, currentStatus) {
             </button>
         `);
     }
-    
+
     if (currentStatus !== 'IN_PROGRESS') {
         buttons.push(`
             <button class="btn btn-warning btn-sm" onclick="updateTaskStatus(${taskId}, 'IN_PROGRESS')">
@@ -242,7 +268,7 @@ function createStatusButtons(taskId, currentStatus) {
             </button>
         `);
     }
-    
+
     if (currentStatus !== 'DONE') {
         buttons.push(`
             <button class="btn btn-success btn-sm" onclick="updateTaskStatus(${taskId}, 'DONE')">
@@ -250,7 +276,7 @@ function createStatusButtons(taskId, currentStatus) {
             </button>
         `);
     }
-    
+
     return buttons.join('');
 }
 
@@ -267,7 +293,7 @@ function formatDate(dateString) {
     const now = new Date();
     const diffInMs = now - date;
     const diffInHours = diffInMs / (1000 * 60 * 60);
-    
+
     // If less than 24 hours, show relative time
     if (diffInHours < 24) {
         if (diffInHours < 1) {
@@ -277,7 +303,7 @@ function formatDate(dateString) {
         const hours = Math.floor(diffInHours);
         return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
     }
-    
+
     // Otherwise show date
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -305,21 +331,21 @@ function showNotification(message, type = 'info') {
 
 addTaskForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    
+
     const title = document.getElementById('taskTitle').value.trim();
     const description = document.getElementById('taskDescription').value.trim();
     const priority = document.getElementById('taskPriority').value;
-    
+
     if (!title) {
         alert('⚠️ Please enter a task title');
         return;
     }
-    
+
     if (title.length > 200) {
         alert('⚠️ Title is too long (max 200 characters)');
         return;
     }
-    
+
     createTask({ title, description, priority });
 });
 
@@ -344,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('%c🚀 Task Board App Initialized', 'color: #667eea; font-size: 16px; font-weight: bold');
     console.log('%c📊 Architecture: Monolithic', 'color: #48bb78; font-size: 14px');
     console.log('%c💡 Keyboard shortcut: Ctrl/Cmd + K to add task', 'color: #999; font-size: 12px');
-    
+
     fetchTasks();
 });
 
